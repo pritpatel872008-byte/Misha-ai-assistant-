@@ -6,7 +6,7 @@ import shutil
 from typing import List, Optional, Dict, Any
 from PIL import Image
 
-from backend.app.vision.models import Project, Layer, ProjectVersion
+from app.vision.models import Project, Layer, ProjectVersion
 
 class ProjectService:
     """
