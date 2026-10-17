@@ -51,7 +51,7 @@ async def chat(request: ChatRequest):
     if not api_key:
         raise HTTPException(status_code=503, detail="OpenAI API is not configured on the server.")
 
-    model = os.environ.get("OPENAI_MODEL", "gpt-6-luna").strip()
+    model = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini").strip()
     input_messages = []
     for message in request.messages:
         input_messages.append({"role": message.role, "content": message.content})
