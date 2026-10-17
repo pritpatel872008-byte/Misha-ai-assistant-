@@ -9,6 +9,10 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
+val mishaBackendUrl = providers.gradleProperty("MISHA_BACKEND_URL")
+  .orElse(providers.environmentVariable("MISHA_BACKEND_URL"))
+  .getOrElse("")
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -19,6 +23,7 @@ android {
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
+    buildConfigField("String", "MISHA_BACKEND_URL", "\"${mishaBackendUrl}\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
