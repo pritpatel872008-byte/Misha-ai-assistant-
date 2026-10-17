@@ -2,6 +2,7 @@ package com.example.voice
 
 import android.content.Context
 import android.util.Log
+import com.example.BuildConfig
 import com.example.ai.MishaParsedIntent
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -40,8 +41,7 @@ data class PythonVoiceMessage(
  */
 class PythonVoiceBridge(
     private val context: Context,
-    private val host: String = "127.0.0.1",
-    private val port: Int = 8765,
+    private val backendUrl: String = BuildConfig.MISHA_BACKEND_URL.ifBlank { "https://misha-ai-backend.onrender.com" },
     private val onWakeWordDetected: (confidence: Float) -> Unit = {},
     private val onTranscriptReceived: (text: String, isFinal: Boolean) -> Unit = { _, _ -> },
     private val onIntentReceived: (MishaParsedIntent) -> Unit = {},
@@ -85,10 +85,18 @@ class PythonVoiceBridge(
 
         isExplicitlyStopped = false
         _connectionState.value = PythonBridgeState.CONNECTING
-        Log.i("PythonVoiceBridge", "Connecting to Python Voice Engine at ws://$host:$port/voice")
+        val baseUrl = backendUrl.trim().trimEnd('/')
+        val wsBase = when {
+            baseUrl.startsWith("https://", ignoreCase = true) -> "wss://" + baseUrl.substring(8)
+            baseUrl.startsWith("http://", ignoreCase = true) -> "ws://" + baseUrl.substring(7)
+            baseUrl.startsWith("wss://", ignoreCase = true) || baseUrl.startsWith("ws://", ignoreCase = true) -> baseUrl
+            else -> "wss://$baseUrl"
+        }
+        val wsUrl = "$wsBase/voice"
+        Log.i("PythonVoiceBridge", "Connecting to Python Voice Engine at $wsUrl")
 
         val request = Request.Builder()
-            .url("ws://$host:$port/voice")
+            .url(wsUrl)
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
