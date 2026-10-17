@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from backend.app.voice.pipeline import VoicePipeline
 from backend.app.vision.router import router as vision_router, STORAGE_DIR
+from backend.app.ai.openai_router import router as openai_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,8 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register Vision Studio Router
+# Register API routers
 app.include_router(vision_router)
+app.include_router(openai_router)
 
 @app.get("/api/images/{filename}")
 async def get_stored_image(filename: str):
