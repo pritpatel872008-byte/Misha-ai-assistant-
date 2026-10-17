@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Misha AI</string>
+    <string name="accessibility_service_description">Misha AI uses Accessibility to automate message dispatching strictly when requested by the user, verifying message submission.</string>
+</resources>

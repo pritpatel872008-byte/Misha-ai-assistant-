@@ -1,0 +1,6 @@
+{
+  "name": "Misha AI",
+  "description": "Futuristic personal AI assistant with voice intelligence, real device automation, and 3D visual identity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
