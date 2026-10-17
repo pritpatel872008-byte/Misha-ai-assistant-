@@ -7,9 +7,15 @@ Misha's OpenAI API key belongs on the **backend server**, never inside the Andro
 Configure these in the hosting provider's **Environment Variables / Secrets** settings:
 
 - `OPENAI_API_KEY` = your secret API key from https://platform.openai.com/api-keys
-- `OPENAI_MODEL` = a model enabled for your API project (default in code: `gpt-6-luna`)
+- `OPENAI_MODEL` = a model enabled for your API project (default in code: `gpt-4.1-mini`)
 
 Do not commit a real key to GitHub. Do not send the key in chat. If a key is ever exposed, revoke it and create a replacement.
+
+## Local `.env` setup
+
+1. Copy `backend/.env.example` to `backend/.env`.
+2. Replace the placeholder with your own API key and choose a model available to your API project.
+3. `backend/.env` is ignored by Git. Never commit it.
 
 ## Run the backend locally
 
@@ -25,7 +31,7 @@ PowerShell example (current terminal only):
 
 ```powershell
 $env:OPENAI_API_KEY = "YOUR_KEY_HERE"
-$env:OPENAI_MODEL = "gpt-6-luna"
+$env:OPENAI_MODEL = "gpt-4.1-mini"
 uvicorn backend.app.main:app --host 0.0.0.0 --port 8765
 ```
 
