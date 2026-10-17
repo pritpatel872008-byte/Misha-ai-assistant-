@@ -3,16 +3,16 @@ import logging
 import time
 import numpy as np
 from typing import Optional, Callable, Dict, Any, Tuple
-from backend.app.voice.models import VoiceState, ParsedActionIntent, ActionExecutionResult, ActionVerificationStatus
-from backend.app.voice.state import VoiceStateMachine
-from backend.app.voice.audio_input import AudioFrameProcessor
-from backend.app.voice.wake_word import OpenWakeWordEngine
-from backend.app.voice.vad import SileroVADEngine
-from backend.app.voice.stt import SpeechToTextEngine
-from backend.app.voice.tts import TextToSpeechEngine
-from backend.app.voice.models_manager import ModelManager
-from backend.app.ai.gemini import GeminiAIEngine
-from backend.app.ai.intent_parser import IntentParser
+from app.voice.models import VoiceState, ParsedActionIntent, ActionExecutionResult, ActionVerificationStatus
+from app.voice.state import VoiceStateMachine
+from app.voice.audio_input import AudioFrameProcessor
+from app.voice.wake_word import OpenWakeWordEngine
+from app.voice.vad import SileroVADEngine
+from app.voice.stt import SpeechToTextEngine
+from app.voice.tts import TextToSpeechEngine
+from app.voice.models_manager import ModelManager
+from app.ai.gemini import GeminiAIEngine
+from app.ai.intent_parser import IntentParser
 
 logger = logging.getLogger("MishaVoicePipeline")
 
