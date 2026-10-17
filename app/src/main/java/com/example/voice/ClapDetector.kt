@@ -16,6 +16,7 @@ class ClapDetector(
     private val cooldownMs = 2000L
 
     private var noiseFloor: Float = 40f
+    private var lastFrameWasClap = false
 
     override fun onAudioFrame(buffer: ShortArray, readSize: Int, rms: Float) {
         if (!isEnabled) return
@@ -23,21 +24,25 @@ class ClapDetector(
         val now = SystemClock.uptimeMillis()
         if (now - lastTriggerTime < cooldownMs) return
 
-        // Update noise floor
+        // Speech syllables can be loud too; require a short, sharp transient,
+        // not just a high frame RMS, before treating audio as a clap.
+        val peak = (0 until readSize).maxOfOrNull { kotlin.math.abs(buffer[it].toInt()).toFloat() } ?: 0f
+
+        // Learn only from quiet frames so ordinary speech doesn't inflate the floor.
         if (rms < noiseFloor * 1.5f) {
             noiseFloor = 0.95f * noiseFloor + 0.05f * rms
         }
 
-        val spikeMultiplier = when (sensitivity) {
-            "HIGH" -> 4.5f
-            "LOW" -> 9.0f
-            else -> 6.5f
+        val sensitivityMultiplier = when (sensitivity) {
+            "HIGH" -> 9f
+            "LOW" -> 16f
+            else -> 12f
         }
+        val peakThreshold = maxOf(6000f, noiseFloor * sensitivityMultiplier)
+        val crestFactor = peak / maxOf(rms, 1f)
+        val isSharpClap = peak >= peakThreshold && crestFactor >= 3.5f
 
-        val spikeThreshold = maxOf(450f, noiseFloor * spikeMultiplier)
-
-        // A clap is characterized by a sharp transient peak
-        if (rms > spikeThreshold) {
+        if (isSharpClap && !lastFrameWasClap) {
             if (firstClapTime == 0L) {
                 // First clap registered
                 firstClapTime = now
@@ -58,5 +63,6 @@ class ClapDetector(
                 firstClapTime = 0L
             }
         }
+        lastFrameWasClap = isSharpClap
     }
 }
