@@ -7,6 +7,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from dotenv import load_dotenv
 from backend.app.voice.pipeline import VoicePipeline
 from backend.app.vision.router import router as vision_router, STORAGE_DIR
 from backend.app.ai.openai_router import router as openai_router
@@ -16,6 +17,9 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s"
 )
 logger = logging.getLogger("MishaVoiceServer")
+
+# Load local development secrets from backend/.env; hosting secrets remain environment variables.
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 app = FastAPI(title="MISHA AI Core & Vision Studio", version="4.0.0")
 
