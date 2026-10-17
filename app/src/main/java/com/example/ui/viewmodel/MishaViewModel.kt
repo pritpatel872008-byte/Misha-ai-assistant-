@@ -280,6 +280,7 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
                 val reqId = MishaEventBus.newRequestId()
                 MishaEventBus.tryEmit(MishaEvent.WakeDetected(reqId, confidence))
                 logDiag("WAKE: 'Misha' detected (confidence=${String.format("%.2f", confidence)})")
+                MishaAssistantService.notifyWakeDetected(getApplication())
                 _uiState.update {
                     it.copy(
                         mishaState = MishaState.WAKE_DETECTED,
@@ -310,21 +311,8 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
             context = getApplication(),
             onWakeWordDetected = { confidence ->
                 if (!echoPreventionManager.isSpeaking) {
-                    val reqId = MishaEventBus.newRequestId()
-                    MishaEventBus.tryEmit(MishaEvent.WakeDetected(reqId, confidence))
-                    logDiag("PYTHON WAKE: 'Misha' detected (confidence=${String.format("%.2f", confidence)})")
+                    // Centralize wake handling in WakeWordDetector to avoid starting two speech recognizers.
                     wakeWordDetector.notifyPythonWakeDetected(confidence)
-                    _uiState.update {
-                        it.copy(
-                            mishaState = MishaState.WAKE_DETECTED,
-                            wakeConfidence = confidence
-                        )
-                    }
-                    app.tts.speak("Yes?")
-                    viewModelScope.launch {
-                        kotlinx.coroutines.delay(600)
-                        startListeningCommand()
-                    }
                 }
             },
             onTranscriptReceived = { text, isFinal ->
