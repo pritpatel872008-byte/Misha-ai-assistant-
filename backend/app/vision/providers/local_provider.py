@@ -7,8 +7,8 @@ from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import cv2
 from typing import Optional
 
-from backend.app.vision.providers.base import AIProvider
-from backend.app.vision.models import (
+from app.vision.providers.base import AIProvider
+from app.vision.models import (
     GenerateImageRequest,
     InpaintRequest,
     ImageToImageRequest,
