@@ -86,7 +86,9 @@ class OpenWakeWordEngine:
                 
                 # Check for target wake word key
                 for key, score in self.model.prediction_buffer.items():
-                    if self.target_wake_word in key.lower() or "misha" in key.lower() or "alexa" in key.lower() or "hey_jarvis" in key.lower():
+                    # Never treat another assistant's wake word (e.g. Alexa/Jarvis)
+                    # as "Misha"; that creates convincing but false wake events.
+                    if self.target_wake_word.lower() in key.lower():
                         current_score = float(score[-1]) if len(score) > 0 else 0.0
                         if current_score >= self.confidence_threshold:
                             self.last_wake_timestamp = now
