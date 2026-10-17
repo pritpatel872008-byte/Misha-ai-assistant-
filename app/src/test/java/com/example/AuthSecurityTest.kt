@@ -27,11 +27,11 @@ class AuthSecurityTest {
 
     @Test
     fun testOtpGeneration() {
-        val otp1 = AuthSecurityUtil.generateOtp(6)
+        val otp1 = AuthSecurityUtil.generate6DigitOtp()
         assertEquals(6, otp1.length)
         assertTrue(otp1.all { it.isDigit() })
 
-        val otp2 = AuthSecurityUtil.generateOtp(6)
+        val otp2 = AuthSecurityUtil.generate6DigitOtp()
         assertNotEquals(otp1, otp2)
     }
 
