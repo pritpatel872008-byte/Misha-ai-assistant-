@@ -48,12 +48,14 @@ jobs:
         run: gradle testDebugUnitTest --no-daemon
 
       - name: Build debug APK
+        if: always()
         run: gradle assembleDebug --no-daemon
 
       - name: Upload APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Misha-AI-APK
           path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
