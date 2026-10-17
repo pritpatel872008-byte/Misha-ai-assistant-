@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import Dict, List, Any
-from backend.app.voice.models import ModelInfo, ModelStatus
+from app.voice.models import ModelInfo, ModelStatus
 
 logger = logging.getLogger("MishaModelManager")
 
