@@ -397,6 +397,14 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
             },
             onRmsChanged = { rms ->
                 _uiState.update { it.copy(currentRms = rms * 20f) }
+            },
+            onListeningReady = {
+                _uiState.update {
+                    it.copy(
+                        mishaState = MishaState.COMMAND_LISTENING,
+                        liveTranscript = "Speak now…"
+                    )
+                }
             }
         )
     }
@@ -429,8 +437,8 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
         if (echoPreventionManager.isSpeaking) return
         _uiState.update {
             it.copy(
-                mishaState = MishaState.COMMAND_LISTENING,
-                liveTranscript = "Listening...",
+                mishaState = MishaState.STANDBY,
+                liveTranscript = "Starting microphone…",
                 assistantResponse = ""
             )
         }
