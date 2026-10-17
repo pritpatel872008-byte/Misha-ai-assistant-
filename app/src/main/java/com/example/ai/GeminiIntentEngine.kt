@@ -381,4 +381,41 @@ class GeminiIntentEngine {
         }
     }
 
+
+    suspend fun generateAssistantReply(userQuery: String): String = withContext(Dispatchers.IO) {
+        val baseUrl = BuildConfig.MISHA_BACKEND_URL.trim().trimEnd('/')
+            .ifBlank { "https://misha-ai-backend.onrender.com" }
+        try {
+            val body = JSONObject().apply {
+                put("messages", JSONArray().put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", userQuery)
+                }))
+                put(
+                    "system_instruction",
+                    "You are Misha, Prit's concise personal AI assistant. Answer the user's actual question helpfully in natural English, Hindi, or Hinglish matching their language. Do not return JSON or claim device actions were completed unless a tool actually performed them. Keep spoken answers clear and suitable for text-to-speech."
+                )
+            }.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+
+            val request = Request.Builder()
+                .url("$baseUrl/api/ai/chat")
+                .post(body)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val responseText = response.body?.string().orEmpty()
+                if (!response.isSuccessful) {
+                    Log.w("MishaAI", "Assistant chat returned HTTP ${response.code}")
+                    return@withContext "Bro, abhi AI server se answer nahi mil raha. Internet ya AI server configuration check karo."
+                }
+                JSONObject(responseText).optString("reply").trim().ifBlank {
+                    "Sorry, mujhe abhi answer generate nahi ho paya. Ek baar phir bolo."
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("MishaAI", "Assistant chat request failed", e)
+            "Bro, AI server se connection nahi ho raha. Internet connection check karke phir try karo."
+        }
+    }
+
 }
