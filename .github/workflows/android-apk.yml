@@ -25,6 +25,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      MISHA_BACKEND_URL: https://misha-ai-backend.onrender.com
     steps:
       - name: Checkout
         uses: actions/checkout@v4
