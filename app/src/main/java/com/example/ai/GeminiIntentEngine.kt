@@ -78,6 +78,13 @@ class GeminiIntentEngine {
                 return@withContext offlineIntent
             }
 
+            // Prefer the secure backend when configured. OpenAI credentials stay server-side.
+            val backendUrl = BuildConfig.MISHA_BACKEND_URL.trim().trimEnd('/')
+            if (backendUrl.isNotBlank()) {
+                val backendResult = parseViaBackend(backendUrl, userQuery, contextInfo)
+                if (backendResult != null) return@withContext backendResult
+            }
+
             val apiKey = BuildConfig.GEMINI_API_KEY
             if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
                 // Fallback to local rule engine if no API key set
@@ -329,4 +336,49 @@ class GeminiIntentEngine {
             }
         }
     }
+    private fun parseViaBackend(
+        backendUrl: String,
+        userQuery: String,
+        contextInfo: String
+    ): MishaParsedIntent? {
+        return try {
+            val fullPrompt = if (contextInfo.isNotBlank()) {
+                "Device Context: $contextInfo\nUser: $userQuery"
+            } else {
+                userQuery
+            }
+            val body = JSONObject().apply {
+                put("messages", JSONArray().put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", fullPrompt)
+                }))
+                put("system_instruction", systemPrompt)
+            }.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+
+            val request = Request.Builder()
+                .url("$backendUrl/api/ai/chat")
+                .post(body)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    Log.w("MishaAI", "Backend chat returned HTTP ${response.code}")
+                    return null
+                }
+                val responseText = response.body?.string().orEmpty()
+                val reply = JSONObject(responseText).optString("reply").trim()
+                if (reply.isBlank()) return null
+                val normalized = reply
+                    .removePrefix("```json")
+                    .removePrefix("```")
+                    .removeSuffix("```")
+                    .trim()
+                adapter.fromJson(normalized)
+            }
+        } catch (e: Exception) {
+            Log.w("MishaAI", "Secure AI backend unavailable; using configured fallback.", e)
+            null
+        }
+    }
+
 }
