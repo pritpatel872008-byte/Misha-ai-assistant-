@@ -9,7 +9,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+// Use API 34, which has a stable Robolectric runtime across CI environments.
+@Config(sdk = [34])
 class ExampleRobolectricTest {
 
   @Test
