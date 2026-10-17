@@ -5,7 +5,7 @@ import wave
 import io
 import numpy as np
 from typing import Optional, Tuple
-from backend.app.voice.models import ModelStatus, ModelInfo
+from app.voice.models import ModelStatus, ModelInfo
 
 logger = logging.getLogger("MishaSTT")
 

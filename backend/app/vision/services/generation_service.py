@@ -7,7 +7,7 @@ import logging
 from typing import Dict, Optional, Any, Callable
 from PIL import Image
 
-from backend.app.vision.models import (
+from app.vision.models import (
     GenerationJob,
     JobState,
     GenerateImageRequest,
@@ -17,9 +17,9 @@ from backend.app.vision.models import (
     UpscaleRequest,
     ProviderType
 )
-from backend.app.vision.providers.base import AIProvider
-from backend.app.vision.providers.local_provider import LocalAIProvider
-from backend.app.vision.providers.gemini_provider import GeminiAIProvider
+from app.vision.providers.base import AIProvider
+from app.vision.providers.local_provider import LocalAIProvider
+from app.vision.providers.gemini_provider import GeminiAIProvider
 
 logger = logging.getLogger("MishaGenerationService")
 

@@ -280,6 +280,7 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
                 val reqId = MishaEventBus.newRequestId()
                 MishaEventBus.tryEmit(MishaEvent.WakeDetected(reqId, confidence))
                 logDiag("WAKE: 'Misha' detected (confidence=${String.format("%.2f", confidence)})")
+                MishaAssistantService.notifyWakeDetected(getApplication())
                 _uiState.update {
                     it.copy(
                         mishaState = MishaState.WAKE_DETECTED,
@@ -310,21 +311,8 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
             context = getApplication(),
             onWakeWordDetected = { confidence ->
                 if (!echoPreventionManager.isSpeaking) {
-                    val reqId = MishaEventBus.newRequestId()
-                    MishaEventBus.tryEmit(MishaEvent.WakeDetected(reqId, confidence))
-                    logDiag("PYTHON WAKE: 'Misha' detected (confidence=${String.format("%.2f", confidence)})")
+                    // Centralize wake handling in WakeWordDetector to avoid starting two speech recognizers.
                     wakeWordDetector.notifyPythonWakeDetected(confidence)
-                    _uiState.update {
-                        it.copy(
-                            mishaState = MishaState.WAKE_DETECTED,
-                            wakeConfidence = confidence
-                        )
-                    }
-                    app.tts.speak("Yes?")
-                    viewModelScope.launch {
-                        kotlinx.coroutines.delay(600)
-                        startListeningCommand()
-                    }
                 }
             },
             onTranscriptReceived = { text, isFinal ->
@@ -397,6 +385,14 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
             },
             onRmsChanged = { rms ->
                 _uiState.update { it.copy(currentRms = rms * 20f) }
+            },
+            onListeningReady = {
+                _uiState.update {
+                    it.copy(
+                        mishaState = MishaState.COMMAND_LISTENING,
+                        liveTranscript = "Speak now…"
+                    )
+                }
             }
         )
     }
@@ -429,8 +425,8 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
         if (echoPreventionManager.isSpeaking) return
         _uiState.update {
             it.copy(
-                mishaState = MishaState.COMMAND_LISTENING,
-                liveTranscript = "Listening...",
+                mishaState = MishaState.STANDBY,
+                liveTranscript = "Starting microphone…",
                 assistantResponse = ""
             )
         }
@@ -633,6 +629,16 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
             )
             IntentConstants.WEATHER -> weatherHelper.getWeather(parsed.arguments["location"] ?: "Ahmedabad")
             IntentConstants.WEB_SEARCH -> webSearchHelper.performSearch(parsed.arguments["query"] ?: parsed.arguments["q"] ?: "")
+            IntentConstants.GENERAL_AI -> {
+                val question = parsed.arguments["query"]?.takeIf { it.isNotBlank() }
+                    ?: _uiState.value.liveTranscript
+                val answer = geminiEngine.generateAssistantReply(question)
+                ToolExecutionResult(
+                    status = if (answer.startsWith("Bro, abhi AI server") || answer.startsWith("Bro, AI server")) ToolStatus.FAILED else ToolStatus.SUCCESS,
+                    message = answer,
+                    spokenResponse = answer
+                )
+            }
             IntentConstants.STOP, IntentConstants.CANCEL -> {
                 cancelActiveSos()
                 app.tts.stop()

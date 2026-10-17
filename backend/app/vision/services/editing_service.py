@@ -7,7 +7,7 @@ from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import cv2
 from typing import Optional, List, Dict, Any
 
-from backend.app.vision.models import ImageAdjustments, Layer, BlendMode
+from app.vision.models import ImageAdjustments, Layer, BlendMode
 
 class EditingService:
     """

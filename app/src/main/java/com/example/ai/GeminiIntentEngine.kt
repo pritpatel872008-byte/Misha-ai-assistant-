@@ -78,6 +78,13 @@ class GeminiIntentEngine {
                 return@withContext offlineIntent
             }
 
+            // Prefer the secure backend when configured. OpenAI credentials stay server-side.
+            val backendUrl = BuildConfig.MISHA_BACKEND_URL.trim().trimEnd('/')
+            if (backendUrl.isNotBlank()) {
+                val backendResult = parseViaBackend(backendUrl, userQuery, contextInfo)
+                if (backendResult != null) return@withContext backendResult
+            }
+
             val apiKey = BuildConfig.GEMINI_API_KEY
             if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
                 // Fallback to local rule engine if no API key set
@@ -329,4 +336,86 @@ class GeminiIntentEngine {
             }
         }
     }
+    private fun parseViaBackend(
+        backendUrl: String,
+        userQuery: String,
+        contextInfo: String
+    ): MishaParsedIntent? {
+        return try {
+            val fullPrompt = if (contextInfo.isNotBlank()) {
+                "Device Context: $contextInfo\nUser: $userQuery"
+            } else {
+                userQuery
+            }
+            val body = JSONObject().apply {
+                put("messages", JSONArray().put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", fullPrompt)
+                }))
+                put("system_instruction", systemPrompt)
+            }.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+
+            val request = Request.Builder()
+                .url("$backendUrl/api/ai/chat")
+                .post(body)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    Log.w("MishaAI", "Backend chat returned HTTP ${response.code}")
+                    return null
+                }
+                val responseText = response.body?.string().orEmpty()
+                val reply = JSONObject(responseText).optString("reply").trim()
+                if (reply.isBlank()) return null
+                val normalized = reply
+                    .removePrefix("```json")
+                    .removePrefix("```")
+                    .removeSuffix("```")
+                    .trim()
+                adapter.fromJson(normalized)
+            }
+        } catch (e: Exception) {
+            Log.w("MishaAI", "Secure AI backend unavailable; using configured fallback.", e)
+            null
+        }
+    }
+
+
+    suspend fun generateAssistantReply(userQuery: String): String = withContext(Dispatchers.IO) {
+        val baseUrl = BuildConfig.MISHA_BACKEND_URL.trim().trimEnd('/')
+            .ifBlank { "https://misha-ai-backend.onrender.com" }
+        try {
+            val body = JSONObject().apply {
+                put("messages", JSONArray().put(JSONObject().apply {
+                    put("role", "user")
+                    put("content", userQuery)
+                }))
+                put(
+                    "system_instruction",
+                    "You are Misha, Prit's concise personal AI assistant. Answer the user's actual question helpfully in natural English, Hindi, or Hinglish matching their language. Do not return JSON or claim device actions were completed unless a tool actually performed them. Keep spoken answers clear and suitable for text-to-speech."
+                )
+            }.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+
+            val request = Request.Builder()
+                .url("$baseUrl/api/ai/chat")
+                .post(body)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val responseText = response.body?.string().orEmpty()
+                if (!response.isSuccessful) {
+                    Log.w("MishaAI", "Assistant chat returned HTTP ${response.code}")
+                    return@withContext "Bro, abhi AI server se answer nahi mil raha. Internet ya AI server configuration check karo."
+                }
+                JSONObject(responseText).optString("reply").trim().ifBlank {
+                    "Sorry, mujhe abhi answer generate nahi ho paya. Ek baar phir bolo."
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("MishaAI", "Assistant chat request failed", e)
+            "Bro, AI server se connection nahi ho raha. Internet connection check karke phir try karo."
+        }
+    }
+
 }

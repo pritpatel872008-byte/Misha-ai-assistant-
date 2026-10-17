@@ -5,8 +5,8 @@ import logging
 from PIL import Image
 from typing import Optional
 
-from backend.app.vision.providers.base import AIProvider
-from backend.app.vision.models import (
+from app.vision.providers.base import AIProvider
+from app.vision.models import (
     GenerateImageRequest,
     InpaintRequest,
     ImageToImageRequest,

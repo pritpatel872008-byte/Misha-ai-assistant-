@@ -9,6 +9,10 @@ plugins {
   alias(libs.plugins.google.services)
 }
 
+val mishaBackendUrl = providers.gradleProperty("MISHA_BACKEND_URL")
+  .orElse(providers.environmentVariable("MISHA_BACKEND_URL"))
+  .getOrElse("")
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -19,6 +23,7 @@ android {
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
+    buildConfigField("String", "MISHA_BACKEND_URL", "\"${mishaBackendUrl}\"")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -31,12 +36,6 @@ android {
       keyAlias = "upload"
       keyPassword = System.getenv("KEY_PASSWORD")
     }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
-    }
   }
 
   buildTypes {
@@ -46,7 +45,8 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    // Use Gradle generated default debug keystore in CI; never require a committed keystore.
+    debug { }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11

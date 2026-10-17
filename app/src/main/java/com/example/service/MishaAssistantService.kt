@@ -2,6 +2,8 @@ package com.example.service
 
 import android.Manifest
 import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
@@ -84,8 +86,47 @@ class MishaAssistantService : Service() {
 
     companion object {
         const val NOTIFICATION_ID = 1001
+        private const val WAKE_NOTIFICATION_ID = 1002
+        private const val WAKE_CHANNEL_ID = "misha_wake_alerts"
         var isServiceRunning = false
             private set
+
+
+        fun notifyWakeDetected(context: Context) {
+            val appContext = context.applicationContext
+            val manager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    WAKE_CHANNEL_ID,
+                    "Misha wake alerts",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "Heads-up alert when Misha hears its wake word"
+                    lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+                }
+                manager.createNotificationChannel(channel)
+            }
+
+            val openAssistant = Intent(appContext, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                appContext,
+                1002,
+                openAssistant,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            val notification = NotificationCompat.Builder(appContext, WAKE_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+                .setContentTitle("Misha is listening")
+                .setContentText("Tap to open your assistant and see the voice response.")
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                .setAutoCancel(true)
+                .build()
+            manager.notify(WAKE_NOTIFICATION_ID, notification)
+        }
 
         fun start(context: Context) {
             try {

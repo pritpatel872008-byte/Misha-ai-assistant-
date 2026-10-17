@@ -192,10 +192,20 @@ class DeviceController(private val context: Context) {
                     spokenResponse = "Phone locked."
                 )
             } else {
+                // Android must show explicit consent before Misha can lock the device.
+                val activationIntent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                    putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+                    putExtra(
+                        DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                        "Misha uses Device Administrator only to lock your screen when you explicitly ask."
+                    )
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(activationIntent)
                 ToolExecutionResult(
                     status = ToolStatus.PERMISSION_REQUIRED,
-                    message = "Device Administrator permission is required to lock the screen. Please activate it in Misha Settings.",
-                    spokenResponse = "Please enable Device Administrator in settings to lock the phone."
+                    message = "Android Device Administrator consent screen opened. Enable it, then repeat the lock command.",
+                    spokenResponse = "Please enable Misha's device lock permission, then tell me to lock your phone again."
                 )
             }
         } catch (e: SecurityException) {
