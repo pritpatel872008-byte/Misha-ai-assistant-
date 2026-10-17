@@ -14,7 +14,8 @@ class SpeechRecognizerBridge(
     private val onPartialResult: (String) -> Unit,
     private val onFinalResult: (String) -> Unit,
     private val onError: (String) -> Unit,
-    private val onRmsChanged: (Float) -> Unit = {}
+    private val onRmsChanged: (Float) -> Unit = {},
+    private val onListeningReady: () -> Unit = {}
 ) {
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
@@ -33,9 +34,12 @@ class SpeechRecognizerBridge(
                 setRecognitionListener(object : RecognitionListener {
                     override fun onReadyForSpeech(params: Bundle?) {
                         isListening = true
+                        onListeningReady()
                     }
 
-                    override fun onBeginningOfSpeech() {}
+                    override fun onBeginningOfSpeech() {
+                        isListening = true
+                    }
 
                     override fun onRmsChanged(rmsdB: Float) {
                         onRmsChanged.invoke(rmsdB)
@@ -104,16 +108,16 @@ class SpeechRecognizerBridge(
     }
 
     fun stopListening() {
-        if (isListening || speechRecognizer != null) {
-            try {
-                speechRecognizer?.stopListening()
-                speechRecognizer?.cancel()
-                speechRecognizer?.destroy()
-            } catch (e: Exception) {
-                Log.e("SpeechRecognizerBridge", "Error stopping recognizer", e)
-            }
-            speechRecognizer = null
-            isListening = false
+        val recognizer = speechRecognizer ?: return
+        speechRecognizer = null
+        isListening = false
+        try {
+            // cancel() ends an intentional stop without racing a final-result callback.
+            recognizer.cancel()
+            recognizer.destroy()
+        } catch (e: Exception) {
+            Log.e("SpeechRecognizerBridge", "Error stopping recognizer", e)
+        } finally {
             MicCaptureEngine.instance.resumeFromExternalSpeechRecognizer(context)
         }
     }
