@@ -15,7 +15,8 @@ import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.LEGACY)
-@Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [35])
+// Keep screenshot tests on the same stable Android runtime used by CI.
+@Config(qualifiers = RobolectricDeviceQualifiers.Pixel8, sdk = [34])
 class GreetingScreenshotTest {
 
   @get:Rule val composeTestRule = createComposeRule()
