@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -52,6 +53,7 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .background(brush = Brush.verticalGradient(colors = listOf(Color(0xFF120D24), DarkBg, Color(0xFF080B18))))
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -65,14 +67,14 @@ fun HomeScreen(
             ) {
                 Column {
                     Text(
-                        text = "MISHA AI",
+                        text = "Misha AI",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 2.sp,
                         color = TextPrimary
                     )
                     Text(
-                        text = "Personal Voice Intelligence",
+                        text = "Hey Prit, your personal AI companion",
                         fontSize = 12.sp,
                         color = TextSecondary
                     )
@@ -156,6 +158,34 @@ fun HomeScreen(
                         ) {
                             Text("ABORT", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 11.sp)
                         }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Glass hero panel inspired by the supplied reference.
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                borderColor = PurpleGlow.copy(alpha = 0.42f),
+                backgroundColor = Color(0x332A174B),
+                cornerRadius = 28.dp
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("YOUR AI COMPANION", fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.6.sp, color = CyanGlow)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Misha AI\nIn Your Pocket", fontSize = 25.sp, lineHeight = 29.sp,
+                            fontWeight = FontWeight.ExtraBold, color = TextPrimary)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text("Talk naturally. Get things done.", fontSize = 12.sp, color = TextSecondary)
+                    }
+                    Box(modifier = Modifier.padding(start = 8.dp).size(58.dp).clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(PurpleCore.copy(alpha = 0.85f), CyanCore.copy(alpha = 0.55f)))),
+                        contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = "Misha AI", tint = Color.White, modifier = Modifier.size(29.dp))
                     }
                 }
             }
