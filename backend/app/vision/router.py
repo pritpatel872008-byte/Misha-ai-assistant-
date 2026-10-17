@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from backend.app.vision.models import (
+from app.vision.models import (
     Project,
     GenerationJob,
     GenerateImageRequest,
@@ -18,11 +18,11 @@ from backend.app.vision.models import (
     ImageAdjustments,
     ProjectVersion
 )
-from backend.app.vision.models_manager import ModelManager, ModelInfo
-from backend.app.vision.hardware import detect_hardware
-from backend.app.vision.services.generation_service import GenerationService
-from backend.app.vision.services.project_service import ProjectService
-from backend.app.vision.services.editing_service import EditingService
+from app.vision.models_manager import ModelManager, ModelInfo
+from app.vision.hardware import detect_hardware
+from app.vision.services.generation_service import GenerationService
+from app.vision.services.project_service import ProjectService
+from app.vision.services.editing_service import EditingService
 
 logger = logging.getLogger("MishaVisionRouter")
 
