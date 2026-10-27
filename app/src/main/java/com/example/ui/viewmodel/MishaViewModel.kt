@@ -64,6 +64,7 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
     private val routineManager = RoutineManager(repository, deviceController, weatherHelper)
     private val memoryManager = MemoryManager(repository)
     private val geminiEngine = GeminiIntentEngine()
+    private val remoteChat = MishaRemoteChat()
     val permissionInspector = com.example.security.PermissionInspector(application)
 
     // V4 Architecture Subsystems
@@ -464,6 +465,27 @@ class MishaViewModel(application: Application) : AndroidViewModel(application) {
             // Check if contextual follow-up applies
             val contextualFollowUp = contextConversationManager.resolveContextualFollowUp(text)
             val parsedIntent = contextualFollowUp ?: geminiEngine.parseUserCommand(text)
+
+            // General conversation uses the deployed Vercel API; device actions stay on the
+            // local intent/tool path so remote chat cannot pretend it executed phone actions.
+            if (parsedIntent.intent == IntentConstants.GENERAL_AI) {
+                val remoteReply = remoteChat.reply(text)
+                if (!remoteReply.isNullOrBlank()) {
+                    repository.addMessage(sender = "ASSISTANT", text = remoteReply, requestId = requestId)
+                    _uiState.update {
+                        it.copy(
+                            mishaState = MishaState.SPEAKING,
+                            assistantResponse = remoteReply,
+                            lastExecutionSummary = "Answered using Misha chat API"
+                        )
+                    }
+                    app.tts.speak(remoteReply)
+                    logDiag("REMOTE CHAT: Vercel response received")
+                    return@launch
+                }
+                logDiag("REMOTE CHAT: unavailable; using local fallback")
+            }
+
             contextConversationManager.updateContext(parsedIntent)
 
             MishaEventBus.emit(MishaEvent.IntentDetected(requestId, parsedIntent.intent, parsedIntent.arguments))
